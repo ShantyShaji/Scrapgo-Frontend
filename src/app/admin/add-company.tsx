@@ -107,6 +107,9 @@ export default function AddCompany() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>Add New Company</Text>
 
@@ -165,6 +168,12 @@ export default function AddCompany() {
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
           autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
+          textContentType="newPassword"
+          passwordRules="minlength: 8;"
+          keyboardType="default"
+          selectionColor="#166534"
         />
 
         <TouchableOpacity

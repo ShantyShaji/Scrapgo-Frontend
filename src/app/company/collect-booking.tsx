@@ -210,7 +210,12 @@ export default function CollectBookingScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Scrap Collection</Text>
       <Text style={styles.subtitle}>Booking #{booking.id}</Text>
 

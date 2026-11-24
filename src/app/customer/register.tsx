@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -76,7 +78,16 @@ export default function CustomerRegister() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        showsVerticalScrollIndicator={false}
+      >
         {/* <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.back}>← Back</Text>
         </TouchableOpacity> */}
@@ -91,28 +102,44 @@ export default function CustomerRegister() {
         <TextInput
           style={styles.input}
           placeholder="Enter your full name"
+          placeholderTextColor="#7A8D7F"
           value={name}
           onChangeText={setName}
+          autoComplete="name"
+          textContentType="name"
+          underlineColorAndroid="transparent"
+          cursorColor="#16834A"
         />
 
         <Text style={styles.label}>Mobile Number</Text>
         <TextInput
           style={styles.input}
           placeholder="10-digit mobile number"
+          placeholderTextColor="#7A8D7F"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
           maxLength={10}
+          autoComplete="tel"
+          textContentType="telephoneNumber"
+          underlineColorAndroid="transparent"
+          cursorColor="#16834A"
         />
 
         <Text style={styles.label}>Email Address</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your email"
+          placeholderTextColor="#7A8D7F"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          underlineColorAndroid="transparent"
+          cursorColor="#16834A"
         />
 
         <Text style={styles.label}>Password</Text>
@@ -121,15 +148,29 @@ export default function CustomerRegister() {
           <TextInput
             style={styles.passwordInput}
             placeholder="Create a password (8 characters minimum)"
+            placeholderTextColor="#7A8D7F"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
             autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="new-password"
+            textContentType="newPassword"
+            passwordRules="minlength: 8;"
+            keyboardType="default"
+            selectionColor="#16834A"
+            underlineColorAndroid="transparent"
+            cursorColor="#16834A"
+            onSubmitEditing={handleRegister}
+            returnKeyType="done"
           />
 
           <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
+            onPressIn={() => setShowPassword((visible) => !visible)}
             style={styles.eyeButton}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -155,6 +196,7 @@ export default function CustomerRegister() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -163,6 +205,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F0F8F1',
+  },
+  keyboard: {
+    flex: 1,
   },
   content: {
     flexGrow: 1,
@@ -200,6 +245,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#FFFFFF',
+    color: '#1F2937',
     borderWidth: 1,
     borderColor: '#D5E5D8',
     borderRadius: 10,
@@ -247,6 +293,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     fontSize: 16,
+    color: '#1F2937',
   },
 
   eyeButton: {

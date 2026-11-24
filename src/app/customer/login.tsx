@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -88,9 +89,15 @@ export default function CustomerLogin() {
     <SafeAreaView style={[styles.container, { backgroundColor: '#F0F8F1' }]}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+          showsVerticalScrollIndicator={false}
+        >
           {/* <TouchableOpacity
             style={styles.homeButton}
             onPress={() => router.replace('/company/dashboard')}
@@ -109,10 +116,16 @@ export default function CustomerLogin() {
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
+            placeholderTextColor="#7A8D7F"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            underlineColorAndroid="transparent"
+            cursorColor="#16834A"
           />
 
           <Text style={styles.label}>Password</Text>
@@ -121,15 +134,28 @@ export default function CustomerLogin() {
             <TextInput
               style={styles.passwordInput}
               placeholder="Enter your password"
+              placeholderTextColor="#7A8D7F"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="password"
+              textContentType="password"
+              keyboardType="default"
+              selectionColor="#16834A"
+              underlineColorAndroid="transparent"
+              cursorColor="#16834A"
+              onSubmitEditing={handleLogin}
+              returnKeyType="done"
             />
 
             <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
+              onPressIn={() => setShowPassword((visible) => !visible)}
               style={styles.eyeButton}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             >
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -145,7 +171,7 @@ export default function CustomerLogin() {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Don't have an account?
+              Don&apos;t have an account?
             </Text>
             <TouchableOpacity
               onPress={() => router.push('/customer/register')}
@@ -153,7 +179,7 @@ export default function CustomerLogin() {
               <Text style={styles.link}> Register</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -167,8 +193,11 @@ const styles = StyleSheet.create({
   keyboard: {
     flex: 1,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 25,
   },
@@ -198,6 +227,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#FFFFFF',
+    color: '#1F2937',
     borderWidth: 1,
     borderColor: '#D5E5D8',
     borderRadius: 10,
@@ -263,6 +293,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     fontSize: 16,
+    color: '#1F2937',
   },
 
   eyeButton: {

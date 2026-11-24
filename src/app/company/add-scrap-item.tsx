@@ -175,6 +175,9 @@ const fetchScrapItem = async () => {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>
         {isEditing ? 'Edit Scrap Item' : 'Add New Scrap Item'}

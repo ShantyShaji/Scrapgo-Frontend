@@ -3,11 +3,12 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,8 +16,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import { API_URL } from '../../constants/api';
+
+type Region = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
 
 type ScrapItem = {
   id: number;
@@ -66,6 +74,59 @@ const [mapRegion, setMapRegion] = useState<Region>({
 });
 
 const [locationLoading, setLocationLoading] = useState(false);
+
+const osmMapHtml = useMemo(() => {
+  const markerScript = selectedLocation
+    ? `
+      const marker = L.marker(
+        [${selectedLocation.latitude}, ${selectedLocation.longitude}],
+        { draggable: true }
+      ).addTo(map);
+      marker.on('dragend', function(event) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'map-click',
+          latitude: event.target.getLatLng().lat,
+          longitude: event.target.getLatLng().lng
+        }));
+      });
+    `
+    : '';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <style>
+          html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+          const map = L.map('map').setView(
+            [${mapRegion.latitude}, ${mapRegion.longitude}],
+            ${selectedLocation ? 15 : 5}
+          );
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          ${markerScript}
+          map.on('click', function(event) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'map-click',
+              latitude: event.latlng.lat,
+              longitude: event.latlng.lng
+            }));
+          });
+        </script>
+      </body>
+    </html>
+  `;
+}, [mapRegion, selectedLocation]);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [photos, setPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -430,6 +491,8 @@ Alert.alert(
         style={styles.formScroll}
         contentContainerStyle={styles.formContent}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.companyCard}>
           <Text style={styles.companyLabel}>Selected Company</Text>
@@ -574,36 +637,30 @@ Alert.alert(
       </Text>
     </TouchableOpacity>
 
-    {/* Interactive map */}
-    <MapView
-      style={styles.map}
-      region={mapRegion}
-      onPress={(event) => {
-        const { latitude, longitude } =
-          event.nativeEvent.coordinate;
-
-        selectMapLocation(latitude, longitude);
-      }}
-    >
-      {selectedLocation && (
-        <Marker
-          coordinate={selectedLocation}
-          title="Pickup Location"
-          description="Your selected scrap pickup location"
-          draggable
-          onDragEnd={(event) => {
-            const { latitude, longitude } =
-              event.nativeEvent.coordinate;
-
-            selectMapLocation(latitude, longitude);
-          }}
-        />
-      )}
-    </MapView>
-
-    <Text style={styles.mapHint}>
-      Tap on the map or drag the pin to select your pickup location.
-    </Text>
+    {Platform.OS === 'web' ? (
+      <View style={styles.webMapMessage}>
+        <Text style={styles.webMapMessageText}>
+          Interactive maps are available in the mobile app. Use Search or
+          Use Current Location on the web.
+        </Text>
+      </View>
+    ) : (
+      <WebView
+        originWhitelist={['*']}
+        source={{ html: osmMapHtml }}
+        style={styles.map}
+        onMessage={(event) => {
+          try {
+            const message = JSON.parse(event.nativeEvent.data);
+            if (message.type === 'map-click') {
+              selectMapLocation(message.latitude, message.longitude);
+            }
+          } catch {
+            Alert.alert('Map Error', 'Unable to select that map location.');
+          }
+        }}
+      />
+    )}
 
     {selectedLocation && (
       <TouchableOpacity
@@ -963,6 +1020,17 @@ map: {
   width: '100%',
   height: 300,
   borderRadius: 10,
+},
+
+webMapMessage: {
+  backgroundColor: '#EFF6FF',
+  padding: 16,
+  borderRadius: 10,
+},
+
+webMapMessageText: {
+  color: '#1D4ED8',
+  textAlign: 'center',
 },
 
 mapHint: {
